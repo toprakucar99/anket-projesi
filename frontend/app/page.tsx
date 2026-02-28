@@ -10,14 +10,14 @@ export default function Home() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [token, setToken] = useState('')
-  const [sorular, setSorular] = useState([])
+  const [sorular, setSorular] = useState<any[]>([]) // TypeScript için tip tanımı eklendi
   const [userTokens, setUserTokens] = useState(0)
   const [mesaj, setMesaj] = useState('Sisteme hoş geldiniz')
 
   // 1. GİRİŞ FONKSİYONU
   const loginYap = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/login`, { // GÜNCELLENDİ
+      const res = await fetch(`${BASE_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
@@ -26,7 +26,10 @@ export default function Home() {
       if (data.token) {
         setToken(data.token)
         setMesaj("Giriş başarılı. Lütfen anketi doldurun.")
-        sorulariGetir() 
+        // Soruları getir fonksiyonunu çağırıyoruz
+        const resQ = await fetch(`${BASE_URL}/questions`)
+        const dataQ = await resQ.json()
+        setSorular(dataQ)
       } else {
         setMesaj("Hata: " + (data.error || "Giriş başarısız"))
       }
@@ -35,21 +38,10 @@ export default function Home() {
     }
   }
 
-  // 2. SORULARI GETİRME FONKSİYONU
-  const sorulariGetir = async () => {
-    try {
-      const res = await fetch(`${BASE_URL}/questions`) // GÜNCELLENDİ
-      const data = await res.json()
-      setSorular(data)
-    } catch (err) {
-      console.log("Sorular yüklenemedi");
-    }
-  }
-
-  // 3. ANKETİ BİTİRME VE TOKEN ALMA
+  // 2. ANKETİ BİTİRME VE TOKEN ALMA
   const anketBitir = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/finish-survey`, { // GÜNCELLENDİ
+      const res = await fetch(`${BASE_URL}/finish-survey`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
@@ -70,7 +62,7 @@ export default function Home() {
       
       {/* SAĞ ÜST KÖŞE CÜZDAN */}
       {token && (
-        <div className="fixed top-5 right-5 bg-white border-2 border-yellow-400 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce-short">
+        <div className="fixed top-5 right-5 bg-white border-2 border-yellow-400 p-4 rounded-2xl shadow-xl flex items-center gap-3">
           <span className="text-2xl">💰</span>
           <div>
             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Cüzdanım</p>
@@ -83,6 +75,7 @@ export default function Home() {
         <h1 className="text-3xl font-black mb-8 text-center text-slate-800 tracking-tight">Anket Sistemi</h1>
         
         {!token ? (
+          /* GİRİŞ EKRANI */
           <div className="flex flex-col gap-5">
             <input 
               className="w-full border-2 border-gray-100 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all bg-gray-50 text-lg"
@@ -102,15 +95,16 @@ export default function Home() {
             </button>
           </div>
         ) : (
+          /* ANKET EKRANI */
           <div className="flex flex-col gap-6">
             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
                <p className="text-blue-800 font-medium">Hoş geldin, <span className="font-bold">{email}</span></p>
             </div>
 
-            {sorular.length > 0 ? (
+            {sorular && sorular.length > 0 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-700 border-b pb-2">Aktif Sorular</h2>
-                {sorular.map((soru) => (
+                {sorular.map((soru: any) => (
                   <div key={soru.id} className="p-5 bg-white border-2 border-gray-50 rounded-2xl shadow-sm hover:border-blue-200 transition">
                     <p className="font-bold text-slate-800 mb-3">{soru.text}</p>
                     <textarea 
